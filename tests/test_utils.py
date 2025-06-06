@@ -112,7 +112,7 @@ class TestGeometricCalculations:
         assert abs(angle_straight - 180.0) < 1e-6
         
         # Acute angle case
-        point3_acute = (1.5, 0.5)  # This creates an acute angle
+        point3_acute = (0, 0.5)  # This creates an acute angle
         angle_acute = calculate_angle(point1, point2, point3_acute)
         assert 0 < angle_acute < 90
     
