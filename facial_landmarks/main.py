@@ -72,7 +72,7 @@ Examples:
     # Processing options
     parser.add_argument('--max-faces', type=int, default=1,
                        help='Maximum number of faces to detect')
-    parser.add_argument('--face-confidence', type=float, default=0.7,
+    parser.add_argument('--face-confidence', type=float, default=0.5,
                        help='Face detection confidence threshold')
     parser.add_argument('--landmark-confidence', type=float, default=0.5,
                        help='Landmark detection confidence threshold')
@@ -135,7 +135,7 @@ def create_config_from_args(args: argparse.Namespace) -> ProcessingConfig:
         ProcessingConfig object
     """
     # Handle backward compatibility for confidence parameters
-    face_confidence = getattr(args, 'face_confidence', 0.7)
+    face_confidence = getattr(args, 'face_confidence', 0.5)
     if hasattr(args, 'confidence') and args.confidence != 0.5:
         face_confidence = args.confidence
     
@@ -267,7 +267,7 @@ def demo_webcam(config: ProcessingConfig):
     processor = FacialLandmarkProcessor(config)
     
     try:
-        processor.process_video_stream(source=0, display=True)
+        processor.process_webcam(device_id=0)
     except Exception as e:
         print(f"Error during webcam processing: {e}")
         return False
@@ -343,11 +343,10 @@ def demo_video(video_path: str, config: ProcessingConfig, output_path: Optional[
     processor = FacialLandmarkProcessor(config)
     
     try:
-        processor.process_video_stream(
-            source=video_path, 
-            output_path=output_path,
-            display=True
-        )
+        if output_path:
+            processor.process_video(video_path, output_path=output_path)
+        else:
+            processor.process_video(video_path)
     except Exception as e:
         print(f"Error during video processing: {e}")
         return False

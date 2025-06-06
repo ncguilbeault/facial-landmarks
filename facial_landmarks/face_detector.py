@@ -63,8 +63,11 @@ class FaceDetector:
             List of FaceDetection objects
         """
         # Validate input
-        if image is None or image.size == 0:
-            raise ValueError("Invalid image: image is None or empty")
+        if image is None:
+            raise AttributeError("Invalid image: image is None")
+        
+        if image.size == 0:
+            raise ValueError("Invalid image: image is empty")
         
         if len(image.shape) != 3 or image.shape[2] != 3:
             raise ValueError("Invalid image: expected 3-channel BGR image")
@@ -173,7 +176,7 @@ class FaceDetector:
         
         return crops
     
-    def bbox_to_pixels(self, bbox: BoundingBox, image_shape: Tuple[int, int]) -> BoundingBox:
+    def bbox_to_pixels(self, bbox: BoundingBox, image_shape: Tuple[int, int]) -> Tuple[int, int, int, int]:
         """
         Convert normalized bbox to pixel coordinates.
         
@@ -182,14 +185,14 @@ class FaceDetector:
             image_shape: (height, width) of image
             
         Returns:
-            BoundingBox in pixel coordinates
+            Tuple of (x, y, width, height) in pixel coordinates
         """
         h, w = image_shape
-        return BoundingBox(
-            x=bbox.x * w,
-            y=bbox.y * h,
-            width=bbox.width * w,
-            height=bbox.height * h
+        return (
+            int(bbox.x * w),
+            int(bbox.y * h),
+            int(bbox.width * w),
+            int(bbox.height * h)
         )
     
     def draw_faces(self, image: np.ndarray, faces: List[FaceDetection], 
@@ -234,7 +237,8 @@ class FaceDetector:
             Cropped face region
         """
         h, w = image.shape[:2]
-        x, y, face_w, face_h = int(face.bbox.x), int(face.bbox.y), int(face.bbox.width), int(face.bbox.height)
+        # Convert normalized coordinates to pixels
+        x, y, face_w, face_h = self.bbox_to_pixels(face.bbox, (h, w))
         
         # Ensure coordinates are within image bounds
         x1 = max(0, x)

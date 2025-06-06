@@ -5,6 +5,7 @@ Tests for the main CLI interface and application entry points.
 import pytest
 import sys
 import os
+import numpy as np
 from unittest.mock import patch, MagicMock, call
 import tempfile
 import argparse

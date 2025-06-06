@@ -24,6 +24,7 @@ class ProcessingResult:
     fps: float = 0.0
     image_shape: Tuple[int, int] = (0, 0)
     processed_image: Optional[np.ndarray] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
     
     def __getitem__(self, key):
         """Allow dictionary-like access for backward compatibility."""
@@ -365,18 +366,14 @@ class FacialLandmarkProcessor:
         
         return analysis
     
-    def save_results(self, 
-                    image: np.ndarray, 
-                    result: ProcessingResult, 
-                    output_dir: str = "output") -> Dict[str, str]:
+    def save_results(self, *args, **kwargs) -> Dict[str, str]:
         """
         Save processing results to files.
         
-        Args:
-            image: Original image
-            result: Processing results
-            output_dir: Output directory
-            
+        Supports two calling patterns:
+        1. save_results(image, result, output_dir="output")
+        2. save_results(results_dict, output_path)
+        
         Returns:
             Dictionary with saved file paths
         """
@@ -384,25 +381,48 @@ class FacialLandmarkProcessor:
         import json
         from datetime import datetime
         
-        os.makedirs(output_dir, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Handle different calling patterns
+        if len(args) >= 2 and isinstance(args[1], (ProcessingResult, dict)) and isinstance(args[0], np.ndarray):
+            # Pattern 1: save_results(image, result, output_dir)
+            image = args[0]
+            result = args[1]
+            output_dir = args[2] if len(args) > 2 else kwargs.get('output_dir', 'output')
+            
+            os.makedirs(output_dir, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            saved_files = {}
+            
+            # Save annotated image
+            annotated_image = self.draw_results(image, result)
+            image_path = os.path.join(output_dir, f"result_{timestamp}.jpg")
+            cv2.imwrite(image_path, annotated_image)
+            saved_files['image'] = image_path
+            
+            # Save analysis data
+            analysis = self.get_facial_analysis(image)
+            json_path = os.path.join(output_dir, f"analysis_{timestamp}.json")
+            with open(json_path, 'w') as f:
+                json.dump(analysis, f, indent=2)
+            saved_files['analysis'] = json_path
+            
+            return saved_files
+            
+        elif len(args) == 2 and isinstance(args[0], dict) and isinstance(args[1], str):
+            # Pattern 2: save_results(results_dict, output_path)
+            results = args[0]
+            output_path = args[1]
+            
+            # Save results dictionary directly to JSON file
+            with open(output_path, 'w') as f:
+                json.dump(results, f, indent=2)
+            
+            return {'results': output_path}
         
-        saved_files = {}
-        
-        # Save annotated image
-        annotated_image = self.draw_results(image, result)
-        image_path = os.path.join(output_dir, f"result_{timestamp}.jpg")
-        cv2.imwrite(image_path, annotated_image)
-        saved_files['image'] = image_path
-        
-        # Save analysis data
-        analysis = self.get_facial_analysis(image)
-        json_path = os.path.join(output_dir, f"analysis_{timestamp}.json")
-        with open(json_path, 'w') as f:
-            json.dump(analysis, f, indent=2)
-        saved_files['analysis'] = json_path
-        
-        return saved_files
+        else:
+            raise ValueError("Invalid arguments for save_results. Expected patterns: "
+                           "save_results(image, result, output_dir) or "
+                           "save_results(results_dict, output_path)")
     
     def update_config(self, **kwargs) -> None:
         """Update processing configuration."""
@@ -478,7 +498,8 @@ class FacialLandmarkProcessor:
         cap = cv2.VideoCapture(video_path)
         
         if not cap.isOpened():
-            raise RuntimeError(f"Failed to open video file: {video_path}")
+            print(f"Warning: Failed to open video file: {video_path}")
+            return None
         
         # Get video properties
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

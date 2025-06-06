@@ -603,9 +603,12 @@ def get_bounding_box(landmarks: List[Tuple[float, float]]) -> Tuple[int, int, in
         
     Returns:
         Bounding box (x, y, width, height)
+        
+    Raises:
+        ValueError: If landmarks list is empty
     """
     if not landmarks:
-        return (0, 0, 0, 0)
+        raise ValueError("Cannot compute bounding box for empty landmarks list")
     
     x_coords = [point[0] for point in landmarks]
     y_coords = [point[1] for point in landmarks]
@@ -761,27 +764,49 @@ def calculate_eye_aspect_ratio(eye_landmarks: List[Tuple[float, float]]) -> floa
     Calculate eye aspect ratio.
     
     Args:
-        eye_landmarks: Eye landmarks
+        eye_landmarks: Eye landmarks (minimum 6 points)
         
     Returns:
-        Eye aspect ratio
+        Eye aspect ratio (0.0 for closed eye)
     """
     if len(eye_landmarks) < 6:
         return 0.0
     
-    # Vertical distances
-    v1 = calculate_distance(eye_landmarks[1], eye_landmarks[5])
-    v2 = calculate_distance(eye_landmarks[2], eye_landmarks[4])
-    
-    # Horizontal distance
-    h = calculate_distance(eye_landmarks[0], eye_landmarks[3])
-    
-    if h == 0:
-        return 0.0
-    
-    # Eye aspect ratio
-    ear = (v1 + v2) / (2.0 * h)
-    return ear
+    # For 8-point eye landmarks: left, top-left, top-center, top-right, right, bottom-right, bottom-center, bottom-left
+    # Vertical distances: top points to bottom points
+    if len(eye_landmarks) >= 8:
+        # Use more comprehensive vertical distance calculation
+        v1 = calculate_distance(eye_landmarks[1], eye_landmarks[7])  # top-left to bottom-left
+        v2 = calculate_distance(eye_landmarks[2], eye_landmarks[6])  # top-center to bottom-center  
+        v3 = calculate_distance(eye_landmarks[3], eye_landmarks[5])  # top-right to bottom-right
+        
+        # Horizontal distance (left corner to right corner)
+        h = calculate_distance(eye_landmarks[0], eye_landmarks[4])
+        
+        if h == 0:
+            return 0.0
+        
+        # Average vertical distance
+        avg_vertical = (v1 + v2 + v3) / 3.0
+        
+        # Eye aspect ratio - should be 0 when eye is closed (no vertical distance)
+        ear = avg_vertical / h
+        return ear
+    else:
+        # Standard 6-point calculation
+        # Vertical distances
+        v1 = calculate_distance(eye_landmarks[1], eye_landmarks[5])
+        v2 = calculate_distance(eye_landmarks[2], eye_landmarks[4])
+        
+        # Horizontal distance
+        h = calculate_distance(eye_landmarks[0], eye_landmarks[3])
+        
+        if h == 0:
+            return 0.0
+        
+        # Eye aspect ratio
+        ear = (v1 + v2) / (2.0 * h)
+        return ear
 
 
 def calculate_mouth_aspect_ratio(mouth_landmarks: List[Tuple[float, float]]) -> float:
@@ -789,26 +814,45 @@ def calculate_mouth_aspect_ratio(mouth_landmarks: List[Tuple[float, float]]) -> 
     Calculate mouth aspect ratio.
     
     Args:
-        mouth_landmarks: Mouth landmarks
+        mouth_landmarks: Mouth landmarks (minimum 4 points)
         
     Returns:
-        Mouth aspect ratio
+        Mouth aspect ratio (0.0 for closed mouth)
     """
     if len(mouth_landmarks) < 4:
         return 0.0
     
-    # Vertical distance
-    v = calculate_distance(mouth_landmarks[1], mouth_landmarks[3])
-    
-    # Horizontal distance
-    h = calculate_distance(mouth_landmarks[0], mouth_landmarks[2])
-    
-    if h == 0:
-        return 0.0
-    
-    # Mouth aspect ratio
-    mar = v / h
-    return mar
+    if len(mouth_landmarks) >= 8:
+        # For 8-point mouth: left, top-left, top-center, top-right, right, bottom-right, bottom-center, bottom-left
+        # Vertical distances: top points to bottom points
+        v1 = calculate_distance(mouth_landmarks[1], mouth_landmarks[7])  # top-left to bottom-left
+        v2 = calculate_distance(mouth_landmarks[2], mouth_landmarks[6])  # top-center to bottom-center
+        v3 = calculate_distance(mouth_landmarks[3], mouth_landmarks[5])  # top-right to bottom-right
+        
+        # Horizontal distance (left corner to right corner)
+        h = calculate_distance(mouth_landmarks[0], mouth_landmarks[4])
+        
+        if h == 0:
+            return 0.0
+        
+        # Average vertical distance - should be 0 when mouth is closed
+        avg_vertical = (v1 + v2 + v3) / 3.0
+        mar = avg_vertical / h
+        return mar
+    else:
+        # Standard 4-point calculation
+        # Vertical distance (top to bottom)
+        v = calculate_distance(mouth_landmarks[1], mouth_landmarks[3])
+        
+        # Horizontal distance (left to right)
+        h = calculate_distance(mouth_landmarks[0], mouth_landmarks[2])
+        
+        if h == 0:
+            return 0.0
+        
+        # Mouth aspect ratio
+        mar = v / h
+        return mar
 
 
 def smooth_landmarks(landmarks_sequence: List[List[Tuple[float, float]]], 
