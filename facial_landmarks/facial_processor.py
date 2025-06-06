@@ -345,9 +345,11 @@ class FacialLandmarkProcessor:
         
         # Face analysis
         for i, face in enumerate(result.faces):
+            # Convert BoundingBox to pixel coordinates for JSON serialization
+            bbox_pixels = self.face_detector.bbox_to_pixels(face.bbox, image.shape[:2])
             face_info = {
                 'id': i,
-                'bbox': face.bbox,
+                'bbox': list(bbox_pixels),  # Convert to list for JSON serialization
                 'confidence': face.confidence,
                 'keypoints': face.keypoints
             }
