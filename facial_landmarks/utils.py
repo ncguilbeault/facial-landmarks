@@ -1000,4 +1000,3 @@ def convert_iplimage_to_numpy(iplimage: object) -> np.ndarray:
     image_shape = (height, width, channels) if channels > 1 else (height, width)
     
     return numpy_array.reshape(image_shape)
-    

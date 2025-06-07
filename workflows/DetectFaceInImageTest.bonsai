@@ -2,10 +2,10 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:py="clr-namespace:Bonsai.Scripting.Python;assembly=Bonsai.Scripting.Python"
+                 xmlns:p1="clr-namespace:FacialLandmarks;assembly=Extensions"
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
-                 xmlns:p1="clr-namespace:FacialLandmarks;assembly=Extensions"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -19,13 +19,50 @@
           <py:Script>import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(os.curdir)))
-from facial_landmarks.facial_processor import FacialLandmarkProcessor, convert_processing_result_to_csharp_format
+from facial_landmarks.facial_processor import FacialLandmarkProcessor, convert_processing_result_to_csharp_format, convert_csharp_to_processing_config
 from facial_landmarks.utils import convert_iplimage_to_numpy</py:Script>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:GetRuntime" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:ProcessingConfig">
+          <p1:FaceDetectionConfidence>0.5</p1:FaceDetectionConfidence>
+          <p1:FaceModelSelection>0</p1:FaceModelSelection>
+          <p1:MaxNumFaces>2</p1:MaxNumFaces>
+          <p1:RefineLandmarks>true</p1:RefineLandmarks>
+          <p1:LandmarkDetectionConfidence>0.9</p1:LandmarkDetectionConfidence>
+          <p1:LandmarkTrackingConfidence>0.9</p1:LandmarkTrackingConfidence>
+          <p1:EnableFaceDetection>true</p1:EnableFaceDetection>
+          <p1:EnableLandmarkDetection>true</p1:EnableLandmarkDetection>
+          <p1:EnableParallelProcessing>true</p1:EnableParallelProcessing>
+          <p1:DrawFaceBoxes>false</p1:DrawFaceBoxes>
+          <p1:DrawFaceKeypoints>true</p1:DrawFaceKeypoints>
+          <p1:DrawLandmarks>true</p1:DrawLandmarks>
+          <p1:DrawLandmarkConnections>true</p1:DrawLandmarkConnections>
+          <p1:DrawDetailedLandmarks>true</p1:DrawDetailedLandmarks>
+          <p1:ShowLandmarkIndices>false</p1:ShowLandmarkIndices>
+          <p1:SaveVideo>false</p1:SaveVideo>
+          <p1:ShowFps>true</p1:ShowFps>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:SerializeToJson" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:Set">
+          <py:VariableName>processing_config</py:VariableName>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:Exec">
-          <py:Script>processor = FacialLandmarkProcessor()</py:Script>
+          <py:Script>config = convert_csharp_to_processing_config(processing_config)</py:Script>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:Exec">
+          <py:Script>processor = FacialLandmarkProcessor(config)</py:Script>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
@@ -88,23 +125,35 @@ from facial_landmarks.utils import convert_iplimage_to_numpy</py:Script>
       <Expression xsi:type="scr:ExpressionTransform">
         <scr:Expression>1/(it/1000)</scr:Expression>
       </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Faces.Count</Selector>
+      </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Landmarks.Count</Selector>
+      </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
-      <Edge From="1" To="2" Label="Source1" />
+      <Edge From="2" To="3" Label="Source1" />
       <Edge From="3" To="4" Label="Source1" />
+      <Edge From="4" To="5" Label="Source1" />
       <Edge From="5" To="6" Label="Source1" />
       <Edge From="6" To="7" Label="Source1" />
-      <Edge From="7" To="8" Label="Source1" />
       <Edge From="8" To="9" Label="Source1" />
-      <Edge From="9" To="10" Label="Source1" />
       <Edge From="10" To="11" Label="Source1" />
       <Edge From="11" To="12" Label="Source1" />
       <Edge From="12" To="13" Label="Source1" />
+      <Edge From="13" To="14" Label="Source1" />
       <Edge From="14" To="15" Label="Source1" />
       <Edge From="15" To="16" Label="Source1" />
+      <Edge From="16" To="17" Label="Source1" />
       <Edge From="17" To="18" Label="Source1" />
-      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="19" To="20" Label="Source1" />
+      <Edge From="20" To="21" Label="Source1" />
+      <Edge From="22" To="23" Label="Source1" />
+      <Edge From="22" To="25" Label="Source1" />
+      <Edge From="22" To="26" Label="Source1" />
+      <Edge From="23" To="24" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

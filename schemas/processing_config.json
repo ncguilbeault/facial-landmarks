@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "ProcessingConfig",
+  "type": "object",
+  "description": "Configuration for facial processing pipeline",
+  "properties": {
+    "face_detection_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.5,
+      "title": "FaceDetectionConfidence",
+      "description": "Minimum confidence threshold for face detection"
+    },
+    "face_model_selection": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0,
+      "title": "FaceModelSelection",
+      "description": "0 for short-range, 1 for full-range model"
+    },
+    "max_num_faces": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1,
+      "title": "MaxNumFaces",
+      "description": "Maximum number of faces to detect"
+    },
+    "refine_landmarks": {
+      "type": "boolean",
+      "default": true,
+      "title": "RefineLandmarks",
+      "description": "Whether to refine landmarks around eyes and lips"
+    },
+    "landmark_detection_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.5,
+      "title": "LandmarkDetectionConfidence",
+      "description": "Minimum confidence threshold for landmark detection"
+    },
+    "landmark_tracking_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.5,
+      "title": "LandmarkTrackingConfidence",
+      "description": "Minimum confidence threshold for landmark tracking"
+    },
+    "enable_face_detection": {
+      "type": "boolean",
+      "default": true,
+      "title": "EnableFaceDetection",
+      "description": "Whether to enable face detection"
+    },
+    "enable_landmark_detection": {
+      "type": "boolean",
+      "default": true,
+      "title": "EnableLandmarkDetection",
+      "description": "Whether to enable landmark detection"
+    },
+    "enable_parallel_processing": {
+      "type": "boolean",
+      "default": false,
+      "title": "EnableParallelProcessing",
+      "description": "Whether to enable parallel processing"
+    },
+    "draw_face_boxes": {
+      "type": "boolean",
+      "default": false,
+      "title": "DrawFaceBoxes",
+      "description": "Whether to draw face bounding boxes"
+    },
+    "draw_face_keypoints": {
+      "type": "boolean",
+      "default": true,
+      "title": "DrawFaceKeypoints",
+      "description": "Whether to draw face keypoints"
+    },
+    "draw_landmarks": {
+      "type": "boolean",
+      "default": true,
+      "title": "DrawLandmarks",
+      "description": "Whether to draw facial landmarks"
+    },
+    "landmark_subset": {
+      "$ref": "#/definitions/LandmarkSubset",
+      "default": "all",
+      "title": "LandmarkSubset",
+      "description": "Subset of landmarks to draw"
+    },
+    "draw_landmark_connections": {
+      "type": "boolean",
+      "default": true,
+      "title": "DrawLandmarkConnections",
+      "description": "Whether to draw connections between landmarks"
+    },
+    "draw_detailed_landmarks": {
+      "type": "boolean",
+      "default": true,
+      "title": "DrawDetailedLandmarks",
+      "description": "Whether to draw detailed landmarks"
+    },
+    "show_landmark_indices": {
+      "type": "boolean",
+      "default": false,
+      "title": "ShowLandmarkIndices",
+      "description": "Whether to show landmark indices"
+    },
+    "min_detection_confidence": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "default": null,
+      "title": "MinDetectionConfidence",
+      "description": "Backward compatibility alias for face_detection_confidence"
+    },
+    "min_tracking_confidence": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1,
+      "default": null,
+      "title": "MinTrackingConfidence",
+      "description": "Backward compatibility alias for landmark_tracking_confidence"
+    },
+    "output_path": {
+      "type": ["string", "null"],
+      "default": null,
+      "title": "OutputPath",
+      "description": "Output path for saving results"
+    },
+    "save_video": {
+      "type": "boolean",
+      "default": false,
+      "title": "SaveVideo",
+      "description": "Whether to save processed video"
+    },
+    "show_fps": {
+      "type": "boolean",
+      "default": true,
+      "title": "ShowFps",
+      "description": "Whether to show FPS information"
+    }
+  },
+  "required": [],
+  "additionalProperties": false,
+  "definitions": {
+    "LandmarkSubset": {
+      "type": "string",
+      "title": "LandmarkSubset",
+      "description": "Predefined landmark subsets for different use cases",
+      "enum": [
+        "face_oval",
+        "left_eye",
+        "right_eye",
+        "left_eyebrow",
+        "right_eyebrow",
+        "nose",
+        "lips",
+        "all"
+      ]
+    }
+  }
+}

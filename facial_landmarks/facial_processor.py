@@ -8,6 +8,7 @@ import numpy as np
 import time
 from typing import List, Tuple, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, field_validator
+import json
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
@@ -863,3 +864,17 @@ def convert_processing_result_to_csharp_format(result: ProcessingResult, image_s
     }
     
     return output
+
+def convert_csharp_to_processing_config(csharp_config: str) -> ProcessingConfig:
+    """
+    Convert C# configuration dictionary to ProcessingConfig.
+    
+    Args:
+        csharp_config: Dictionary with C# configuration parameters
+        
+    Returns:
+        ProcessingConfig instance
+    """
+
+    # Convert C# dictionary to ProcessingConfig
+    return ProcessingConfig(**json.loads(csharp_config))
