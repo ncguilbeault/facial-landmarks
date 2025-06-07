@@ -7,24 +7,22 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from typing import List, Tuple, Optional, NamedTuple
-from dataclasses import dataclass
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class BoundingBox:
+class BoundingBox(BaseModel):
     """Bounding box with convenient attribute access."""
-    x: float
-    y: float
-    width: float
-    height: float
+    x: float = Field(..., description="X coordinate of the bounding box")
+    y: float = Field(..., description="Y coordinate of the bounding box")
+    width: float = Field(..., ge=0, description="Width of the bounding box")
+    height: float = Field(..., ge=0, description="Height of the bounding box")
 
 
-@dataclass
-class FaceDetection:
+class FaceDetection(BaseModel):
     """Data class representing a detected face."""
-    bbox: BoundingBox
-    confidence: float
-    keypoints: Optional[List[Tuple[int, int]]] = None
+    bbox: BoundingBox = Field(..., description="Bounding box of the detected face")
+    confidence: float = Field(..., ge=0, le=1, description="Detection confidence score")
+    keypoints: Optional[List[Tuple[int, int]]] = Field(default=None, description="Optional facial keypoints")
 
 
 class FaceDetector:

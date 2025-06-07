@@ -5,6 +5,7 @@ Utility functions for image processing, analysis, and visualization.
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from typing import List, Tuple, Optional, Dict, Any, Union
 from PIL import Image, ImageDraw, ImageFont
 import io
@@ -920,3 +921,82 @@ def interpolate_landmarks(landmarks1: List[Tuple[float, float]],
         interpolated.append((x, y))
     
     return interpolated
+
+def convert_iplimage_to_numpy(iplimage: object) -> np.ndarray:
+    """
+    Convert an IplImage object from OpenCV.NET to a numpy array.
+
+    Args:
+        iplimage: OpenCV.NET IplImage object with IntPtr to unmanaged memory
+
+    Returns:
+        np.ndarray: Converted numpy array
+    """
+    import ctypes
+    
+    if not hasattr(iplimage, 'ImageData') or not hasattr(iplimage, 'Width') or not hasattr(iplimage, 'Height') or not hasattr(iplimage, 'Channels'):
+        raise ValueError("Invalid OpenCV.NET IplImage object - missing required attributes")
+    
+    # Get image properties
+    width = int(iplimage.Width)
+    height = int(iplimage.Height)
+    channels = int(iplimage.Channels)
+    
+    # Calculate total number of bytes
+    total_bytes = width * height * channels
+    
+    if total_bytes <= 0:
+        raise ValueError(f"Invalid image dimensions: {width}x{height}x{channels}")
+    
+    try:
+        # Method 1: Using ctypes to copy from unmanaged memory
+        # Convert IntPtr to ctypes pointer
+        if hasattr(iplimage.ImageData, 'ToInt64'):
+            # .NET IntPtr
+            ptr_value = iplimage.ImageData.ToInt64()
+        elif hasattr(iplimage.ImageData, 'value'):
+            # Some Python IntPtr wrappers
+            ptr_value = iplimage.ImageData.value
+        else:
+            # Try direct conversion
+            ptr_value = int(iplimage.ImageData)
+        
+        # Create ctypes pointer to the unmanaged memory
+        ptr = ctypes.cast(ptr_value, ctypes.POINTER(ctypes.c_uint8))
+        
+        # Copy data from unmanaged memory to Python bytes
+        # This is the most efficient way to get the data
+        image_data = ctypes.string_at(ptr, total_bytes)
+        
+        # Convert to numpy array
+        numpy_array = np.frombuffer(image_data, dtype=np.uint8)
+        
+    except (AttributeError, ValueError, OSError) as e:
+        # Fallback method: Try using System.Runtime.InteropServices.Marshal if available
+        try:
+            # This requires pythonnet or similar .NET interop
+            import clr
+            clr.AddReference("System")
+            from System.Runtime.InteropServices import Marshal
+            
+            # Copy from unmanaged memory to managed byte array
+            managed_array = Marshal.AllocHGlobal(total_bytes)
+            Marshal.Copy(iplimage.ImageData, managed_array, 0, total_bytes)
+            
+            # Convert to bytes
+            byte_array = bytearray(total_bytes)
+            Marshal.Copy(managed_array, byte_array, 0, total_bytes)
+            Marshal.FreeHGlobal(managed_array)
+            
+            # Convert to numpy array
+            numpy_array = np.frombuffer(byte_array, dtype=np.uint8)
+            
+        except ImportError:
+            raise RuntimeError("Unable to convert IntPtr to numpy array. "
+                             "Need either ctypes access to pointer value or pythonnet for .NET interop") from e
+    
+    # Reshape to proper image dimensions
+    # OpenCV uses BGR format, so shape is (height, width, channels)
+    image_shape = (height, width, channels) if channels > 1 else (height, width)
+    
+    return numpy_array.reshape(image_shape)

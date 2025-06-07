@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import time
 from typing import List, Tuple, Optional, Dict, Any, Union
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Field, validator
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
@@ -15,16 +15,18 @@ from face_detector import FaceDetector, FaceDetection
 from landmark_detector import LandmarkDetector, FacialLandmarks, LandmarkSubset
 
 
-@dataclass
-class ProcessingResult:
+class ProcessingResult(BaseModel):
     """Combined result from face detection and landmark detection."""
-    faces: List[FaceDetection] = field(default_factory=list)
-    landmarks: List[FacialLandmarks] = field(default_factory=list)
-    processing_time: float = 0.0
-    fps: float = 0.0
-    image_shape: Tuple[int, int] = (0, 0)
-    processed_image: Optional[np.ndarray] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    faces: List[FaceDetection] = Field(default_factory=list, description="Detected faces")
+    landmarks: List[FacialLandmarks] = Field(default_factory=list, description="Facial landmarks")
+    processing_time: float = Field(default=0.0, ge=0, description="Processing time in seconds")
+    fps: float = Field(default=0.0, ge=0, description="Frames per second")
+    image_shape: Tuple[int, int] = Field(default=(0, 0), description="Image dimensions (height, width)")
+    processed_image: Optional[np.ndarray] = Field(default=None, description="Processed image with annotations")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    
+    class Config:
+        arbitrary_types_allowed = True  # Allow np.ndarray
     
     def __getitem__(self, key):
         """Allow dictionary-like access for backward compatibility."""
@@ -37,54 +39,131 @@ class ProcessingResult:
         return hasattr(self, key)
 
 
-@dataclass
-class ProcessingConfig:
+class ProcessingConfig(BaseModel):
     """Configuration for facial processing pipeline."""
     # Face detection settings
-    face_detection_confidence: float = 0.5
-    face_model_selection: int = 0  # 0 for short-range, 1 for full-range
+    face_detection_confidence: float = Field(
+        default=0.5, 
+        ge=0, 
+        le=1, 
+        description="Minimum confidence threshold for face detection"
+    )
+    face_model_selection: int = Field(
+        default=0, 
+        ge=0, 
+        le=1, 
+        description="0 for short-range, 1 for full-range model"
+    )
     
     # Landmark detection settings
-    max_num_faces: int = 1
-    refine_landmarks: bool = True
-    landmark_detection_confidence: float = 0.5
-    landmark_tracking_confidence: float = 0.5
+    max_num_faces: int = Field(
+        default=1, 
+        ge=1, 
+        description="Maximum number of faces to detect"
+    )
+    refine_landmarks: bool = Field(
+        default=True, 
+        description="Whether to refine landmarks around eyes and lips"
+    )
+    landmark_detection_confidence: float = Field(
+        default=0.5, 
+        ge=0, 
+        le=1, 
+        description="Minimum confidence threshold for landmark detection"
+    )
+    landmark_tracking_confidence: float = Field(
+        default=0.5, 
+        ge=0, 
+        le=1, 
+        description="Minimum confidence threshold for landmark tracking"
+    )
     
     # Processing settings
-    enable_face_detection: bool = True
-    enable_landmark_detection: bool = True
-    enable_parallel_processing: bool = False
+    enable_face_detection: bool = Field(
+        default=True, 
+        description="Whether to enable face detection"
+    )
+    enable_landmark_detection: bool = Field(
+        default=True, 
+        description="Whether to enable landmark detection"
+    )
+    enable_parallel_processing: bool = Field(
+        default=False, 
+        description="Whether to enable parallel processing"
+    )
     
     # Visualization settings
-    draw_face_boxes: bool = False
-    draw_face_keypoints: bool = True
-    draw_landmarks: bool = True
-    landmark_subset: LandmarkSubset = LandmarkSubset.ALL
-    draw_landmark_connections: bool = True
-    draw_detailed_landmarks: bool = True
-    show_landmark_indices: bool = False
+    draw_face_boxes: bool = Field(
+        default=False, 
+        description="Whether to draw face bounding boxes"
+    )
+    draw_face_keypoints: bool = Field(
+        default=True, 
+        description="Whether to draw face keypoints"
+    )
+    draw_landmarks: bool = Field(
+        default=True, 
+        description="Whether to draw facial landmarks"
+    )
+    landmark_subset: LandmarkSubset = Field(
+        default=LandmarkSubset.ALL, 
+        description="Subset of landmarks to draw"
+    )
+    draw_landmark_connections: bool = Field(
+        default=True, 
+        description="Whether to draw connections between landmarks"
+    )
+    draw_detailed_landmarks: bool = Field(
+        default=True, 
+        description="Whether to draw detailed landmarks"
+    )
+    show_landmark_indices: bool = Field(
+        default=False, 
+        description="Whether to show landmark indices"
+    )
     
     # Backward compatibility aliases for tests
-    min_detection_confidence: Optional[float] = None
-    min_tracking_confidence: Optional[float] = None
+    min_detection_confidence: Optional[float] = Field(
+        default=None, 
+        ge=0, 
+        le=1, 
+        description="Backward compatibility alias for face_detection_confidence"
+    )
+    min_tracking_confidence: Optional[float] = Field(
+        default=None, 
+        ge=0, 
+        le=1, 
+        description="Backward compatibility alias for landmark_tracking_confidence"
+    )
     
     # Output settings
-    output_path: Optional[str] = None
-    save_video: bool = False
-    show_fps: bool = True
+    output_path: Optional[str] = Field(
+        default=None, 
+        description="Output path for saving results"
+    )
+    save_video: bool = Field(
+        default=False, 
+        description="Whether to save processed video"
+    )
+    show_fps: bool = Field(
+        default=True, 
+        description="Whether to show FPS information"
+    )
     
-    def __post_init__(self):
-        """Set up backward compatibility and validate settings."""
-        # Handle backward compatibility
-        if self.min_detection_confidence is not None:
-            self.face_detection_confidence = self.min_detection_confidence
-        else:
-            self.min_detection_confidence = self.face_detection_confidence
-            
-        if self.min_tracking_confidence is not None:
-            self.landmark_tracking_confidence = self.min_tracking_confidence
-        else:
-            self.min_tracking_confidence = self.landmark_tracking_confidence
+    @validator('min_detection_confidence', 'min_tracking_confidence', pre=True, always=True)
+    def set_backward_compatibility(cls, v, values, field):
+        """Handle backward compatibility for old field names."""
+        if field.name == 'min_detection_confidence':
+            if v is not None:
+                values['face_detection_confidence'] = v
+            else:
+                v = values.get('face_detection_confidence', 0.5)
+        elif field.name == 'min_tracking_confidence':
+            if v is not None:
+                values['landmark_tracking_confidence'] = v
+            else:
+                v = values.get('landmark_tracking_confidence', 0.5)
+        return v
 
 
 class FacialLandmarkProcessor:

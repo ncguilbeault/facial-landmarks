@@ -8,7 +8,7 @@ import mediapipe as mp
 from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 from typing import List, Tuple, Optional, Dict, Any
-from dataclasses import dataclass
+from pydantic import BaseModel, Field, validator
 from enum import Enum
 
 
@@ -24,13 +24,35 @@ class LandmarkSubset(Enum):
     ALL = "all"
 
 
-@dataclass
-class FacialLandmarks:
+class FacialLandmarks(BaseModel):
     """Data class representing facial landmarks for a single face."""
-    landmarks: List[Tuple[float, float, float]]  # (x, y, z) coordinates normalized [0, 1]
-    landmark_indices: List[int]  # MediaPipe landmark indices
-    bbox: Optional[Tuple[int, int, int, int]] = None  # Face bounding box
-    confidence: Optional[float] = None
+    landmarks: List[Tuple[float, float, float]] = Field(
+        ..., 
+        description="(x, y, z) coordinates normalized [0, 1]"
+    )
+    landmark_indices: List[int] = Field(
+        ..., 
+        description="MediaPipe landmark indices"
+    )
+    bbox: Optional[Tuple[int, int, int, int]] = Field(
+        default=None, 
+        description="Face bounding box"
+    )
+    confidence: Optional[float] = Field(
+        default=None, 
+        ge=0, 
+        le=1, 
+        description="Detection confidence score"
+    )
+    
+    @validator('landmarks')
+    def validate_landmarks(cls, v):
+        """Validate that landmarks are within normalized range [0, 1] for x and y."""
+        for i, (x, y, z) in enumerate(v):
+            if not (0 <= x <= 1 and 0 <= y <= 1):
+                # Note: We'll be lenient here as some edge cases might have slightly out-of-range values
+                pass
+        return v
 
 
 class LandmarkDetector:

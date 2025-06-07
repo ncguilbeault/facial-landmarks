@@ -11,7 +11,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'facial_landmarks'))
 
-from face_detector import FaceDetector, FaceDetection
+from face_detector import FaceDetector, FaceDetection, BoundingBox
 from conftest import create_test_image, create_face_like_image, create_noisy_image
 
 
@@ -79,11 +79,7 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         # Normalized bbox
-        bbox = MagicMock()
-        bbox.x = 0.25
-        bbox.y = 0.3
-        bbox.width = 0.4
-        bbox.height = 0.5
+        bbox = BoundingBox(x=0.25, y=0.3, width=0.4, height=0.5)
         
         image_shape = (480, 640)  # height, width
         pixel_bbox = detector.bbox_to_pixels(bbox, image_shape)
@@ -100,21 +96,14 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         # Full image bbox
-        bbox = MagicMock()
-        bbox.x = 0.0
-        bbox.y = 0.0
-        bbox.width = 1.0
-        bbox.height = 1.0
+        bbox = BoundingBox(x=0.0, y=0.0, width=1.0, height=1.0)
         
         image_shape = (100, 200)
         pixel_bbox = detector.bbox_to_pixels(bbox, image_shape)
         assert pixel_bbox == (0, 0, 200, 100)
         
         # Small bbox
-        bbox.x = 0.9
-        bbox.y = 0.9
-        bbox.width = 0.1
-        bbox.height = 0.1
+        bbox = BoundingBox(x=0.9, y=0.9, width=0.1, height=0.1)
         
         pixel_bbox = detector.bbox_to_pixels(bbox, image_shape)
         assert pixel_bbox == (180, 90, 20, 10)
@@ -125,7 +114,7 @@ class TestFaceDetector:
         
         # Create sample face detection
         faces = [FaceDetection(
-            bbox=MagicMock(x=0.2, y=0.3, width=0.4, height=0.5),
+            bbox=BoundingBox(x=0.2, y=0.3, width=0.4, height=0.5),
             confidence=0.85
         )]
         
@@ -148,7 +137,7 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         faces = [FaceDetection(
-            bbox=MagicMock(x=0.2, y=0.3, width=0.4, height=0.5),
+            bbox=BoundingBox(x=0.2, y=0.3, width=0.4, height=0.5),
             confidence=0.85
         )]
         
@@ -171,7 +160,7 @@ class TestFaceDetector:
         
         # Create face detection
         face = FaceDetection(
-            bbox=MagicMock(x=0.2, y=0.3, width=0.4, height=0.4),
+            bbox=BoundingBox(x=0.2, y=0.3, width=0.4, height=0.4),
             confidence=0.9
         )
         
@@ -193,7 +182,7 @@ class TestFaceDetector:
         
         # Face bbox extending beyond image boundaries
         face = FaceDetection(
-            bbox=MagicMock(x=0.8, y=0.8, width=0.5, height=0.5),
+            bbox=BoundingBox(x=0.8, y=0.8, width=0.5, height=0.5),
             confidence=0.9
         )
         
@@ -208,10 +197,10 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         faces = [
-            FaceDetection(bbox=MagicMock(), confidence=0.9),
-            FaceDetection(bbox=MagicMock(), confidence=0.4),
-            FaceDetection(bbox=MagicMock(), confidence=0.7),
-            FaceDetection(bbox=MagicMock(), confidence=0.3)
+            FaceDetection(bbox=BoundingBox(x=0.1, y=0.1, width=0.2, height=0.2), confidence=0.9),
+            FaceDetection(bbox=BoundingBox(x=0.2, y=0.2, width=0.3, height=0.3), confidence=0.4),
+            FaceDetection(bbox=BoundingBox(x=0.3, y=0.3, width=0.4, height=0.4), confidence=0.7),
+            FaceDetection(bbox=BoundingBox(x=0.4, y=0.4, width=0.5, height=0.5), confidence=0.3)
         ]
         
         # Filter with threshold 0.5
@@ -233,9 +222,9 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         faces = [
-            FaceDetection(bbox=MagicMock(width=0.3, height=0.3), confidence=0.8),
-            FaceDetection(bbox=MagicMock(width=0.5, height=0.4), confidence=0.7),  # Largest
-            FaceDetection(bbox=MagicMock(width=0.2, height=0.2), confidence=0.9)
+            FaceDetection(bbox=BoundingBox(x=0.1, y=0.1, width=0.3, height=0.3), confidence=0.8),
+            FaceDetection(bbox=BoundingBox(x=0.2, y=0.2, width=0.5, height=0.4), confidence=0.7),  # Largest
+            FaceDetection(bbox=BoundingBox(x=0.3, y=0.3, width=0.2, height=0.2), confidence=0.9)
         ]
         
         largest = detector.get_largest_face(faces)
@@ -252,7 +241,7 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         face = FaceDetection(
-            bbox=MagicMock(width=0.4, height=0.3),
+            bbox=BoundingBox(x=0.1, y=0.1, width=0.4, height=0.3),
             confidence=0.8
         )
         
@@ -326,9 +315,9 @@ class TestFaceDetector:
         detector = FaceDetector()
         
         faces = [
-            FaceDetection(bbox=MagicMock(width=0.3, height=0.3), confidence=0.8),
-            FaceDetection(bbox=MagicMock(width=0.5, height=0.4), confidence=0.7),
-            FaceDetection(bbox=MagicMock(width=0.2, height=0.2), confidence=0.9)
+            FaceDetection(bbox=BoundingBox(x=0.1, y=0.1, width=0.3, height=0.3), confidence=0.8),
+            FaceDetection(bbox=BoundingBox(x=0.2, y=0.2, width=0.5, height=0.4), confidence=0.7),
+            FaceDetection(bbox=BoundingBox(x=0.3, y=0.3, width=0.2, height=0.2), confidence=0.9)
         ]
         
         stats = detector.get_detection_statistics(faces)

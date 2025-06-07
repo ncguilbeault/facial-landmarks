@@ -12,6 +12,8 @@ dependencies = [
     "matplotlib>=3.7.0",
     "scipy>=1.11.0",
     "pytest>=8.4.0",
+    "pythonnet>=3.0.5",
+    "pydantic>=2.11.5",
 ]
 
 [project.optional-dependencies]
