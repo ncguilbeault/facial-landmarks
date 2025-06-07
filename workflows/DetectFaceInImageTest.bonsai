@@ -4,7 +4,9 @@
                  xmlns:py="clr-namespace:Bonsai.Scripting.Python;assembly=Bonsai.Scripting.Python"
                  xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
+                 xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
+                 xmlns:p1="clr-namespace:FacialLandmarks;assembly=Extensions"
+                 xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -15,13 +17,14 @@
         <Combinator xsi:type="py:Exec">
           <py:Script>import sys
 import os
-sys.path.append(os.path.abspath(os.curdir))
-import facial_landmarks.face_detector as face_detector</py:Script>
+sys.path.append(os.path.dirname(os.path.abspath(os.curdir)))
+from facial_landmarks.facial_processor import FacialLandmarkProcessor, convert_processing_result_to_csharp_format
+from facial_landmarks.utils import convert_iplimage_to_numpy</py:Script>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:Exec">
-          <py:Script>detector = face_detector.FaceDetector()</py:Script>
+          <py:Script>processor = FacialLandmarkProcessor()</py:Script>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
@@ -41,76 +44,119 @@ import facial_landmarks.face_detector as face_detector</py:Script>
         <Name>Image</Name>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Take">
-          <rx:Count>1</rx:Count>
-        </Combinator>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:ObserveOn">
-          <rx:Scheduler>ThreadPoolScheduler</rx:Scheduler>
-        </Combinator>
-      </Expression>
-      <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:ObserveOnGIL" />
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:Set">
-          <py:VariableName>first_image</py:VariableName>
+          <py:VariableName>iplimage</py:VariableName>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:Exec">
-          <py:Script>width = first_image.Width
-height = first_image.Height
-channels = first_image.Channels</py:Script>
+          <py:Script>image = convert_iplimage_to_numpy(iplimage)</py:Script>
         </Combinator>
       </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:Exec">
+          <py:Script>result = processor.process_image(image)</py:Script>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:Eval">
+          <py:Expression>print(result)</py:Expression>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="py:Eval">
+          <py:Expression>convert_processing_result_to_csharp_format(result, image.shape[:2])</py:Expression>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="scr:ExpressionTransform">
+        <scr:Expression>it.ToString()</scr:Expression>
+      </Expression>
+      <Expression xsi:type="p1:DeserializeFromJson">
+        <p1:Type xsi:type="TypeMapping" TypeArguments="p1:FacialAnalysisOutput" />
+      </Expression>
+      <Expression xsi:type="rx:BehaviorSubject">
+        <Name>FacialAnalysis</Name>
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>FacialAnalysis</Name>
+      </Expression>
+      <Expression xsi:type="VisualizerMapping" />
       <Expression xsi:type="SubscribeSubject">
         <Name>Image</Name>
       </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:Skip">
-          <rx:Count>1</rx:Count>
-        </Combinator>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="SubscribeSubject">
+          <Name>FacialAnalysis</Name>
+        </Builder>
       </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="rx:ObserveOn">
-          <rx:Scheduler>ThreadPoolScheduler</rx:Scheduler>
-        </Combinator>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="MemberSelector">
+          <Selector>Faces</Selector>
+        </Builder>
       </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="py:ObserveOnGIL" />
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="Index">
+          <Operand xsi:type="IntProperty">
+            <Value>0</Value>
+          </Operand>
+        </Builder>
       </Expression>
-      <Expression xsi:type="dsp:ConvertToArray">
-        <dsp:Depth>F32</dsp:Depth>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="Combinator">
+          <Combinator xsi:type="io:WriteLine" />
+        </Builder>
       </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="py:Set">
-          <py:VariableName>image_bytes</py:VariableName>
-        </Combinator>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="MemberSelector">
+          <Selector>Landmarks</Selector>
+        </Builder>
       </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="py:Exec">
-          <py:Script>image = np.frombuffer(image_bytes).reshape((width, height, channels))
-print(image.shape)</py:Script>
-        </Combinator>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="Index">
+          <Operand xsi:type="IntProperty">
+            <Value>0</Value>
+          </Operand>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="MemberSelector">
+          <Selector>Landmarks</Selector>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="Index">
+          <Operand xsi:type="IntProperty">
+            <Value>0</Value>
+          </Operand>
+        </Builder>
       </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="1" To="2" Label="Source1" />
       <Edge From="3" To="4" Label="Source1" />
-      <Edge From="5" To="6" Label="Source1" />
+      <Edge From="4" To="5" Label="Source1" />
       <Edge From="6" To="7" Label="Source1" />
       <Edge From="7" To="8" Label="Source1" />
       <Edge From="8" To="9" Label="Source1" />
       <Edge From="9" To="10" Label="Source1" />
+      <Edge From="10" To="11" Label="Source1" />
       <Edge From="11" To="12" Label="Source1" />
       <Edge From="12" To="13" Label="Source1" />
       <Edge From="13" To="14" Label="Source1" />
       <Edge From="14" To="15" Label="Source1" />
-      <Edge From="15" To="16" Label="Source1" />
       <Edge From="16" To="17" Label="Source1" />
+      <Edge From="17" To="18" Label="Source1" />
+      <Edge From="19" To="20" Label="Source1" />
+      <Edge From="19" To="23" Label="Source1" />
+      <Edge From="20" To="21" Label="Source1" />
+      <Edge From="21" To="22" Label="Source1" />
+      <Edge From="23" To="24" Label="Source1" />
+      <Edge From="24" To="25" Label="Source1" />
+      <Edge From="25" To="26" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

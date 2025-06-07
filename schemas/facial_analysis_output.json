@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "FacialAnalysisOutput",
+  "type": "object",
+  "description": "Focused output schema for C# interop - represents the complete result from Python face detection and facial landmarks functions",
+  "properties": {
+    "faces": {
+      "type": "array",
+      "title": "Faces",
+      "description": "Array of detected faces with bounding boxes and confidence scores",
+      "items": {
+        "$ref": "#/definitions/DetectedFace"
+      }
+    },
+    "landmarks": {
+      "type": "array", 
+      "title": "Landmarks",
+      "description": "Array of facial landmarks for each detected face",
+      "items": {
+        "$ref": "#/definitions/FacialLandmarks"
+      }
+    },
+    "processing_time_ms": {
+      "type": "number",
+      "minimum": 0,
+      "title": "ProcessingTimeMs",
+      "description": "Processing time in milliseconds"
+    },
+    "image_width": {
+      "type": "integer",
+      "minimum": 1,
+      "title": "ImageWidth",
+      "description": "Width of the processed image in pixels"
+    },
+    "image_height": {
+      "type": "integer", 
+      "minimum": 1,
+      "title": "ImageHeight",
+      "description": "Height of the processed image in pixels"
+    },
+    "face_count": {
+      "type": "integer",
+      "minimum": 0,
+      "title": "FaceCount",
+      "description": "Total number of faces detected"
+    }
+  },
+  "required": [
+    "faces",
+    "landmarks", 
+    "processing_time_ms",
+    "image_width",
+    "image_height",
+    "face_count"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "DetectedFace": {
+      "type": "object",
+      "title": "DetectedFace",
+      "description": "A single detected face with bounding box and metadata",
+      "properties": {
+        "normalized_x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "title": "NormalizedX",
+          "description": "Relative X coordinate of top-left corner of bounding box"
+        },
+        "normalized_y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "title": "NormalizedY",
+          "description": "Relative Y coordinate of top-left corner of bounding box"
+        },
+        "normalized_width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "title": "NormalizedWidth",
+          "description": "Relative width of bounding box"
+        },
+        "normalized_height": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "title": "NormalizedHeight",
+          "description": "Relative height of bounding box"
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "X",
+          "description": "X coordinate of top-left corner of bounding box"
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "Y", 
+          "description": "Y coordinate of top-left corner of bounding box"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "title": "Width",
+          "description": "Width of the bounding box in pixels"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "title": "Height",
+          "description": "Height of the bounding box in pixels"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "title": "Confidence",
+          "description": "Detection confidence score between 0.0 and 1.0"
+        },
+        "face_id": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "FaceId",
+          "description": "Unique identifier for this face within the result set"
+        }
+      },
+      "required": [
+        "x",
+        "y", 
+        "width",
+        "height",
+        "confidence",
+        "face_id"
+      ],
+      "additionalProperties": false
+    },
+    "FacialLandmarks": {
+      "type": "object",
+      "title": "FacialLandmarks",
+      "description": "Facial landmarks for a single detected face",
+      "properties": {
+        "face_id": {
+          "type": "integer",
+          "minimum": 0,
+          "title": "FaceId",
+          "description": "Corresponds to the face_id in DetectedFace"
+        },
+        "landmarks": {
+          "type": "array",
+          "title": "Landmarks",
+          "description": "Array of 468 facial landmark points as [x, y, z] coordinates",
+          "items": {
+            "$ref": "#/definitions/LandmarkPoint"
+          },
+          "minItems": 468,
+          "maxItems": 468
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "title": "Confidence",
+          "description": "Landmark detection confidence score"
+        },
+        "landmark_subset_indices": {
+          "type": "array",
+          "title": "LandmarkSubsetIndices", 
+          "description": "Indices of landmark points for quick access to facial features",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 467
+          }
+        }
+      },
+      "required": [
+        "face_id",
+        "landmarks",
+        "confidence",
+        "landmark_subset_indices"
+      ],
+      "additionalProperties": false
+    },
+    "LandmarkPoint": {
+      "type": "object", 
+      "title": "LandmarkPoint",
+      "description": "A single 3D landmark point",
+      "properties": {
+        "normalized_x": {
+          "type": "number",
+          "title": "NormalizedX",
+          "description": "X coordinate (normalized 0.0-1.0 relative to image width)"
+        },
+        "normalized_y": {
+          "type": "number",
+          "title": "Normalized", 
+          "description": "Y coordinate (normalized 0.0-1.0 relative to image height)"
+        },
+        "normalized_z": {
+          "type": "number",
+          "title": "NormalizedZ",
+          "description": "Z coordinate (depth relative to image plane)"
+        },
+        "x": {
+          "type": "integer",
+          "title": "X",
+          "description": "X coordinate in pixels"
+        },
+        "y": {
+          "type": "integer",
+          "title": "Y", 
+          "description": "Y coordinate in pixels"
+        },
+        "z": {
+          "type": "integer",
+          "title": "Z",
+          "description": "Z coordinate in pixels"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

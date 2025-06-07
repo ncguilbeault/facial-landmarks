@@ -15,9 +15,9 @@ import os
 import logging
 from typing import Optional
 
-from facial_processor import FacialLandmarkProcessor, ProcessingConfig
-from landmark_detector import LandmarkSubset
-from utils import resize_image, enhance_image, create_comparison_image, calculate_face_quality
+from .facial_processor import FacialLandmarkProcessor, ProcessingConfig
+from .landmark_detector import LandmarkSubset
+from .utils import resize_image, enhance_image, create_comparison_image, calculate_face_quality
 
 
 def parse_arguments(args_list: Optional[list] = None) -> argparse.Namespace:

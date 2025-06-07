@@ -196,3 +196,6 @@ cython_debug/
 
 .bonsai/*
 !.bonsai/Bonsai.config
+
+obj/
+bin/

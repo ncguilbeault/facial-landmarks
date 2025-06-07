@@ -8,7 +8,7 @@ import mediapipe as mp
 from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 from typing import List, Tuple, Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
 
@@ -45,7 +45,8 @@ class FacialLandmarks(BaseModel):
         description="Detection confidence score"
     )
     
-    @validator('landmarks')
+    @field_validator('landmarks')
+    @classmethod
     def validate_landmarks(cls, v):
         """Validate that landmarks are within normalized range [0, 1] for x and y."""
         for i, (x, y, z) in enumerate(v):
