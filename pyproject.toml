@@ -31,3 +31,14 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.uv.sources]
+facial-landmarks = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "facial-landmarks",
+]
+
+[project.scripts]
+facial-landmarks = "facial_landmarks.main:main"

@@ -36,19 +36,19 @@ def parse_arguments(args_list: Optional[list] = None) -> argparse.Namespace:
         epilog="""
 Examples:
   # Webcam demo
-  python main.py --webcam
+  uv run facial-landmarks --webcam
   
   # Process single image
-  python main.py --image path/to/image.jpg
+  uv run facial-landmarks --image path/to/image.jpg
   
   # Process video
-  python main.py --video path/to/video.mp4 --output output.mp4
+  uv run facial-landmarks --video path/to/video.mp4 --output output.mp4
   
   # Benchmark performance
-  python main.py --benchmark
+  uv run facial-landmarks --benchmark
   
   # Custom settings
-  python main.py --webcam --max-faces 5 --no-landmarks
+  uv run facial-landmarks --webcam --max-faces 5 --no-landmarks
 """
     )
     

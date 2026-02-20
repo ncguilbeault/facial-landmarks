@@ -11,7 +11,7 @@
     <Nodes>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="py:CreateRuntime">
-          <py:PythonHome />
+          <py:PythonHome>.venv2</py:PythonHome>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">

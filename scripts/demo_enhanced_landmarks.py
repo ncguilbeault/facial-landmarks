@@ -13,8 +13,8 @@ from pathlib import Path
 # Add the facial_landmarks module to path
 sys.path.append(str(Path(__file__).parent / "facial_landmarks"))
 
-from facial_processor import FacialLandmarkProcessor, ProcessingConfig
-from landmark_detector import LandmarkSubset
+from facial_landmarks.facial_processor import FacialLandmarkProcessor, ProcessingConfig
+from facial_landmarks.landmark_detector import LandmarkSubset
 
 
 def create_demo_grid(processor, image):

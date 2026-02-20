@@ -6,8 +6,8 @@ This script shows basic usage of the facial landmarks system.
 
 import cv2
 import numpy as np
-from facial_processor import FacialLandmarkProcessor, ProcessingConfig
-from landmark_detector import LandmarkSubset
+from facial_landmarks.facial_processor import FacialLandmarkProcessor, ProcessingConfig
+from facial_landmarks.landmark_detector import LandmarkSubset
 
 
 def create_test_image():
