@@ -118,9 +118,10 @@ class FaceDetector:
             Image with drawn detections
         """
         result_image = image.copy()
+        h, w = image.shape[:2]
         
         for detection in detections:
-            x, y, w, h = detection.bbox.x, detection.bbox.y, detection.bbox.width, detection.bbox.height
+            x, y, w, h = self.bbox_to_pixels(detection.bbox, (h, w))
             
             # Draw bounding box
             cv2.rectangle(result_image, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
@@ -156,7 +157,7 @@ class FaceDetector:
         h, w = image.shape[:2]
         
         for detection in detections:
-            x, y, face_w, face_h = detection.bbox.x, detection.bbox.y, detection.bbox.width, detection.bbox.height
+            x, y, face_w, face_h = self.bbox_to_pixels(detection.bbox, (h, w))
             
             # Add padding
             pad_w = int(face_w * padding)
@@ -173,7 +174,7 @@ class FaceDetector:
             crops.append((face_crop, (x1, y1, x2 - x1, y2 - y1)))
         
         return crops
-    
+
     def bbox_to_pixels(self, bbox: BoundingBox, image_shape: Tuple[int, int]) -> Tuple[int, int, int, int]:
         """
         Convert normalized bbox to pixel coordinates.
