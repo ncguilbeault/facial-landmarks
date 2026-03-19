@@ -291,7 +291,7 @@ requires-dist = [
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "jsonschema", specifier = ">=4.24.0" },
     { name = "matplotlib", specifier = ">=3.7.0" },
-    { name = "mediapipe", specifier = ">=0.10.0" },
+    { name = "mediapipe", specifier = ">=0.10.0,<=0.10.21" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.0.0" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "opencv-python", specifier = ">=4.8.0" },
